@@ -29,11 +29,13 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
 
+      - name: Debug - List Files
+        run: ls -R
+
       - name: Get dependencies
-        run: flutter pub get
+        run: flutter pub get --verbose
 
       - name: Create .env file
         run: |
