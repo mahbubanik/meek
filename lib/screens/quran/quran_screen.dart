@@ -13,6 +13,7 @@ import '../../widgets/quran/listen_tab.dart';
 import '../../widgets/quran/meaning_tab.dart';
 import '../../widgets/quran/practice_tab.dart';
 
+/// Quran Screen - Exact match to web app design
 class QuranScreen extends StatefulWidget {
   const QuranScreen({super.key});
 
@@ -53,8 +54,8 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
     });
 
     try {
-      // Start with Al-Fatihah
-      _currentSurah = allSurahs.firstWhere((s) => s.id == 1);
+      // Start with Al-Ikhlas (Surah 112) like the screenshot
+      _currentSurah = allSurahs.firstWhere((s) => s.id == 112);
       await _loadVerse(_currentSurah!.id, _currentAyah);
     } catch (e) {
       setState(() {
@@ -86,9 +87,7 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
           verseKey: '$surahId:$ayah',
           verseNumber: ayah,
           surahNumber: surahId,
-          textUthmani: surahId == 1 && ayah == 1 
-            ? 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ'
-            : 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ',
+          textUthmani: _getOfflineArabicText(surahId, ayah),
           translations: [],
         );
       });
@@ -97,6 +96,24 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
         _isLoading = false;
       });
     }
+  }
+
+  String _getOfflineArabicText(int surah, int ayah) {
+    // Bismillah
+    if (ayah == 1 && surah != 1 && surah != 9) {
+      return 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
+    }
+    // Al-Ikhlas
+    if (surah == 112) {
+      const verses = [
+        'قُلْ هُوَ ٱللَّهُ أَحَدٌ',
+        'ٱللَّهُ ٱلصَّمَدُ',
+        'لَمْ يَلِدْ وَلَمْ يُولَدْ',
+        'وَلَمْ يَكُن لَّهُۥ كُفُوًا أَحَدٌۢ',
+      ];
+      return verses[ayah.clamp(1, 4) - 1];
+    }
+    return 'ٱلْحَمْدُ لِلَّهِ رَبِّ ٱلْعَـٰلَمِينَ';
   }
 
   void _selectSurah() {
@@ -131,15 +148,18 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Scaffold(
+      backgroundColor: isDark ? AppColors.deepNavy : AppColors.offWhite,
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            _buildHeader().animate().fadeIn().slideY(begin: -0.1),
+            // Header (X button, Surah name, progress dots)
+            _buildHeader(isDark),
             
-            // Tab Bar
-            _buildTabBar(),
+            // Tab Bar (Listen, Meaning, Practice)
+            _buildTabBar(isDark),
             
             // Content
             Expanded(
@@ -168,87 +188,112 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
                     ),
             ),
             
-            // Navigation Footer (for Listen & Meaning tabs)
-            _buildNavigationFooter(),
+            // Bottom Navigation (Prev | Verse X of Y | Next) - matches screenshot
+            _buildBottomNavigation(isDark),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spacing16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
-          // Back button
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: Icon(Icons.arrow_back, color: context.foregroundColor),
-          ),
-          
-          // Surah name (tappable)
-          Expanded(
-            child: GestureDetector(
-              onTap: _selectSurah,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        _currentSurah?.nameSimple ?? 'Select Surah',
-                        style: AppTypography.headingSmall(context.foregroundColor),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        Icons.keyboard_arrow_down,
-                        color: context.mutedColor,
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  if (_currentSurah != null)
-                    Text(
-                      'Verse $_currentAyah of ${_currentSurah!.versesCount}',
-                      style: AppTypography.bodySmall(context.mutedColor),
-                    ),
-                ],
-              ),
+          // X (Close) button
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
+            child: Icon(
+              Icons.close,
+              color: isDark ? AppColors.cream : AppColors.charcoal,
+              size: 24,
             ),
           ),
           
-          // Settings
-          IconButton(
-            onPressed: () {},
-            icon: Icon(Icons.settings_outlined, color: context.mutedColor),
+          const Spacer(),
+          
+          // Surah name with dropdown
+          GestureDetector(
+            onTap: _selectSurah,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _currentSurah?.nameSimple ?? 'Al-Ikhlas',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.cream : AppColors.charcoal,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.keyboard_arrow_down,
+                  color: isDark ? AppColors.cream : AppColors.charcoal,
+                  size: 20,
+                ),
+              ],
+            ),
           ),
+          
+          const Spacer(),
+          
+          // Progress dots (placeholder for now)
+          _buildProgressDots(isDark),
         ],
       ),
     );
   }
 
-  Widget _buildTabBar() {
+  Widget _buildProgressDots(bool isDark) {
+    final totalVerses = _currentSurah?.versesCount ?? 4;
+    final dotsToShow = totalVerses > 5 ? 5 : totalVerses;
+    
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(dotsToShow, (index) {
+        final isActive = index < _currentAyah;
+        return Container(
+          width: 6,
+          height: 6,
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: isActive
+                ? AppColors.warmGold
+                : (isDark ? Colors.white24 : Colors.black26),
+          ),
+        );
+      }),
+    );
+  }
+
+  Widget _buildTabBar(bool isDark) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: AppTheme.spacing16),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: context.surfaceColor,
-        borderRadius: AppTheme.borderRadiusFull,
-        border: Border.all(color: context.borderColor),
+        color: isDark ? AppColors.darkSurface : Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+        ),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: context.primaryColor,
-          borderRadius: AppTheme.borderRadiusFull,
+          color: AppColors.teal,
+          borderRadius: BorderRadius.circular(20),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
-        unselectedLabelColor: context.mutedColor,
-        labelStyle: AppTypography.labelMedium(Colors.white),
+        unselectedLabelColor: isDark ? AppColors.cream.withValues(alpha: 0.6) : AppColors.charcoal.withValues(alpha: 0.6),
+        labelStyle: const TextStyle(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
         tabs: const [
           Tab(text: 'Listen'),
           Tab(text: 'Meaning'),
@@ -263,11 +308,11 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(color: context.primaryColor),
-          const SizedBox(height: AppTheme.spacing16),
+          CircularProgressIndicator(color: AppColors.teal),
+          const SizedBox(height: 16),
           Text(
             'Loading verse...',
-            style: AppTypography.bodyMedium(context.mutedColor),
+            style: TextStyle(color: AppColors.lightGray),
           ),
         ],
       ),
@@ -277,23 +322,27 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   Widget _buildErrorState() {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(AppTheme.spacing24),
+        padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text('😔', style: TextStyle(fontSize: 48)),
-            const SizedBox(height: AppTheme.spacing16),
+            const SizedBox(height: 16),
             Text(
               'Could not load verse',
-              style: AppTypography.headingSmall(context.foregroundColor),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: AppColors.charcoal,
+              ),
             ),
-            const SizedBox(height: AppTheme.spacing8),
+            const SizedBox(height: 8),
             Text(
               _error ?? 'Unknown error',
-              style: AppTypography.bodySmall(context.mutedColor),
+              style: TextStyle(color: AppColors.lightGray),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppTheme.spacing24),
+            const SizedBox(height: 24),
             ElevatedButton(
               onPressed: _loadInitialData,
               child: const Text('Retry'),
@@ -304,42 +353,92 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
     );
   }
 
-  Widget _buildNavigationFooter() {
-    // Hide footer on Practice tab
+  /// Bottom navigation - EXACT match to screenshot
+  /// Shows: < Prev | Verse X of Y | Next >
+  Widget _buildBottomNavigation(bool isDark) {
+    // Hide on Practice tab
     return AnimatedBuilder(
       animation: _tabController,
       builder: (context, _) {
         if (_tabController.index == 2) return const SizedBox.shrink();
         
+        final canGoPrev = _currentAyah > 1;
+        final canGoNext = _currentSurah != null && _currentAyah < _currentSurah!.versesCount;
+        
         return Container(
-          padding: const EdgeInsets.all(AppTheme.spacing16),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           decoration: BoxDecoration(
-            color: context.surfaceColor,
+            color: isDark ? AppColors.deepNavy : AppColors.offWhite,
             border: Border(
-              top: BorderSide(color: context.borderColor),
+              top: BorderSide(
+                color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+                width: 0.5,
+              ),
             ),
           ),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               // Previous
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _currentAyah > 1 ? _previousVerse : null,
-                  icon: const Icon(Icons.chevron_left),
-                  label: const Text('Previous'),
+              GestureDetector(
+                onTap: canGoPrev ? _previousVerse : null,
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.chevron_left,
+                      size: 20,
+                      color: canGoPrev
+                          ? (isDark ? AppColors.cream : AppColors.charcoal)
+                          : (isDark ? Colors.white24 : Colors.black26),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Prev',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: canGoPrev
+                            ? (isDark ? AppColors.cream : AppColors.charcoal)
+                            : (isDark ? Colors.white24 : Colors.black26),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               
-              const SizedBox(width: AppTheme.spacing12),
+              // Verse indicator
+              Text(
+                'Verse $_currentAyah of ${_currentSurah?.versesCount ?? 0}',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDark ? AppColors.cream.withValues(alpha: 0.6) : AppColors.charcoal.withValues(alpha: 0.6),
+                ),
+              ),
               
               // Next
-              Expanded(
-                child: ElevatedButton.icon(
-                  onPressed: _currentSurah != null && _currentAyah < _currentSurah!.versesCount
-                    ? _nextVerse
-                    : null,
-                  icon: const Icon(Icons.chevron_right),
-                  label: const Text('Next'),
+              GestureDetector(
+                onTap: canGoNext ? _nextVerse : null,
+                child: Row(
+                  children: [
+                    Text(
+                      'Next',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: canGoNext
+                            ? AppColors.teal
+                            : (isDark ? Colors.white24 : Colors.black26),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: canGoNext
+                          ? AppColors.teal
+                          : (isDark ? Colors.white24 : Colors.black26),
+                    ),
+                  ],
                 ),
               ),
             ],

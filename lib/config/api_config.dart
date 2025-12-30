@@ -22,9 +22,14 @@ class ApiConfig {
   static String geminiApiKey = const String.fromEnvironment('GEMINI_API_KEY', defaultValue: '');
   static const String geminiEndpoint = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent';
   
-  /// Groq API - Set via environment
+  /// Groq API - Set via environment (for Whisper + Llama 3.3 70B)
   static String groqApiKey = const String.fromEnvironment('GROQ_API_KEY', defaultValue: '');
   static const String groqEndpoint = 'https://api.groq.com/openai/v1/chat/completions';
+  
+  /// OpenAI API - Set via environment (fallback for Fiqh)
+  static String openaiApiKey = const String.fromEnvironment('OPENAI_API_KEY', defaultValue: '');
+  static const String openaiEndpoint = 'https://api.openai.com/v1/chat/completions';
+
 
   // ============================================
   // QURAN API (Free, no key needed)
@@ -56,8 +61,10 @@ class ApiConfig {
   static void setApiKeys({
     String? gemini,
     String? groq,
+    String? openai,
   }) {
-    if (gemini != null) geminiApiKey = gemini;
-    if (groq != null) groqApiKey = groq;
+    if (gemini != null && gemini.isNotEmpty) geminiApiKey = gemini;
+    if (groq != null && groq.isNotEmpty) groqApiKey = groq;
+    if (openai != null && openai.isNotEmpty) openaiApiKey = openai;
   }
 }

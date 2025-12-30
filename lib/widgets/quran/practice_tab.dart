@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart'; // For kIsWeb
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:record/record.dart';
 import 'dart:async';
-import 'dart:io';
+import 'dart:io' as io; // Prefixed to avoid conflicts, used conditionally
 import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart'; // For fetching blob on web
 
 import '../../models/surah.dart';
 import '../../models/verse.dart';
@@ -43,7 +45,7 @@ class _PracticeTabState extends State<PracticeTab> {
   Timer? _timer;
   List<double> _audioLevels = List.filled(15, 0.1);
   TajweedFeedback? _feedback;
-  String? _recordingPath;
+  String? _recordingPath; // Path on mobile/desktop, or Blob URL on web
 
   @override
   void dispose() {
@@ -55,19 +57,25 @@ class _PracticeTabState extends State<PracticeTab> {
   Future<void> _startRecording() async {
     try {
       if (await _recorder.hasPermission()) {
-        final directory = await getTemporaryDirectory();
-        _recordingPath = '${directory.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        String? path;
         
+        if (!kIsWeb) {
+          final directory = await getTemporaryDirectory();
+          path = '${directory.path}/recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        } 
+        // On web, path is ignored by start(), it returns a blob URL on stop()
+
         await _recorder.start(
           const RecordConfig(
-            encoder: AudioEncoder.aacLc,
+            encoder: AudioEncoder.aacLc, // Browser might use default if this isn't supported
             bitRate: 128000,
             sampleRate: 44100,
           ),
-          path: _recordingPath!,
+          path: path ?? '',
         );
 
         setState(() {
+          _recordingPath = path; // Will be null on web initially
           _state = RecordingState.recording;
           _duration = 0;
         });
@@ -86,20 +94,25 @@ class _PracticeTabState extends State<PracticeTab> {
         // Start monitoring amplitude for waveform
         _monitorAmplitude();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission denied')),
-        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Microphone permission denied')),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Error starting recording: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e')),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      }
     }
   }
 
   void _monitorAmplitude() async {
     while (_state == RecordingState.recording) {
+      if (!mounted) break;
       try {
         final amplitude = await _recorder.getAmplitude();
         final level = (amplitude.current + 60) / 60; // Normalize to 0-1
@@ -122,8 +135,10 @@ class _PracticeTabState extends State<PracticeTab> {
     
     try {
       final path = await _recorder.stop();
+      debugPrint('🛑 Recording stopped. Output path/url: $path');
       
       setState(() {
+        _recordingPath = path;
         _state = RecordingState.processing;
       });
 
@@ -131,6 +146,11 @@ class _PracticeTabState extends State<PracticeTab> {
         await _analyzeRecording(path);
       } else {
         _resetRecording();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Recording failed: No audio captured')),
+          );
+        }
       }
     } catch (e) {
       debugPrint('Error stopping recording: $e');
@@ -140,31 +160,56 @@ class _PracticeTabState extends State<PracticeTab> {
 
   Future<void> _analyzeRecording(String path) async {
     try {
-      final file = File(path);
-      final bytes = await file.readAsBytes();
-      
+      Uint8List? audioBytes;
+
+      if (kIsWeb) {
+        // Fetch audio bytes from Blob URL
+        debugPrint('🌐 Fetching audio from Blob URL: $path');
+        final response = await Dio().get(
+          path,
+          options: Options(responseType: ResponseType.bytes),
+        );
+        audioBytes = Uint8List.fromList(response.data);
+      } else {
+        // Read from file system
+        debugPrint('📂 Reading audio from file: $path');
+        final file = io.File(path);
+        audioBytes = await file.readAsBytes();
+      }
+
+      if (audioBytes == null || audioBytes.isEmpty) {
+        throw Exception('Failed to get audio bytes');
+      }
+
+      debugPrint('🎙️ Analyzing ${audioBytes.length} bytes of audio...');
+
       final feedback = await _aiService.analyzeRecitation(
-        audioBytes: bytes,
+        audioBytes: audioBytes,
         surah: widget.surah.id,
         ayah: widget.verse.verseNumber,
         verseText: widget.verse.textUthmani,
       );
 
-      setState(() {
-        _feedback = feedback;
-        _state = RecordingState.feedback;
-      });
+      if (mounted) {
+        setState(() {
+          _feedback = feedback;
+          _state = RecordingState.feedback;
+        });
+      }
     } catch (e) {
-      // Use fallback feedback
-      setState(() {
-        _feedback = TajweedFeedback(
-          score: 78,
-          positives: ['Clear pronunciation', 'Good rhythm'],
-          improvements: ['Practice Madd elongation'],
-          details: 'MashaAllah! Keep practicing with dedication.',
-        );
-        _state = RecordingState.feedback;
-      });
+      debugPrint('Error during analysis: $e');
+      // Use fallback feedback on error unless it's a critical logic failure
+      if (mounted) {
+        setState(() {
+          _feedback = TajweedFeedback(
+            score: 0,
+            positives: [],
+            improvements: ['Could not analyze audio. Please try again.'],
+            details: 'Detailed Error: $e',
+          );
+          _state = RecordingState.feedback;
+        });
+      }
     }
   }
 

@@ -1,19 +1,63 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../../theme/app_theme.dart';
+import '../profile/profile_edit_screen.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  final _supabase = Supabase.instance.client;
+  Map<String, dynamic>? _profileData;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    final user = _supabase.auth.currentUser;
+    if (user != null) {
+      try {
+        final data = await _supabase
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .single();
+        if (mounted) {
+          setState(() {
+            _profileData = data;
+            _isLoading = false;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error loading profile: $e');
+        if (mounted) setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = context.watch<ThemeProvider>();
     final authProvider = context.watch<AuthProvider>();
+    
+    // Use local profile data or fallback to auth user info
+    final displayName = _profileData?['name'] ?? 'User';
+    final displayMadhab = _profileData?['madhab'] ?? 'Hanafi';
+    final notificationsEnabled = _profileData?['notifications_enabled'] ?? true;
 
     return Scaffold(
       appBar: AppBar(
@@ -24,7 +68,9 @@ class SettingsScreen extends StatelessWidget {
           ),
         ),
       ),
-      body: ListView(
+      body: _isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : ListView(
         padding: const EdgeInsets.all(AppTheme.spacing16),
         children: [
           // Profile Section
@@ -35,9 +81,20 @@ class SettingsScreen extends StatelessWidget {
               _buildListTile(
                 context: context,
                 icon: Icons.person_outline,
-                title: 'Your Profile',
+                title: displayName,
                 subtitle: authProvider.user?.email ?? 'Not signed in',
-                onTap: () {},
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProfileEditScreen(
+                        currentName: displayName,
+                        currentMadhab: displayMadhab,
+                      ),
+                    ),
+                  );
+                  _loadProfile(); // Refresh after edit
+                },
               ),
             ],
           ),
@@ -62,15 +119,37 @@ class SettingsScreen extends StatelessWidget {
                 context: context,
                 icon: Icons.mosque_outlined,
                 title: 'Madhab',
-                subtitle: 'Hanafi',
-                onTap: () {},
+                subtitle: displayMadhab.toString().toUpperCase(),
+                onTap: () async {
+                   // Quick edit just for Madhab
+                   await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProfileEditScreen(
+                        currentName: displayName,
+                        currentMadhab: displayMadhab,
+                      ),
+                    ),
+                  );
+                  _loadProfile();
+                },
               ),
-              _buildListTile(
+              _buildSwitchTile(
                 context: context,
                 icon: Icons.notifications_outlined,
                 title: 'Notifications',
-                subtitle: 'Enabled',
-                onTap: () {},
+                value: notificationsEnabled,
+                onChanged: (value) async {
+                  // Optimistic update
+                  setState(() {
+                    _profileData?['notifications_enabled'] = value;
+                  });
+                  try {
+                    await authProvider.updateProfile(notificationsEnabled: value);
+                  } catch (e) {
+                     _loadProfile(); // Revert on error
+                  }
+                },
               ),
             ],
           ),
@@ -89,9 +168,7 @@ class SettingsScreen extends StatelessWidget {
                 titleColor: AppColors.error,
                 onTap: () async {
                   await authProvider.signOut();
-                  if (context.mounted) {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  }
+                  // Auth wrapper will handle redirection
                 },
               ),
             ],

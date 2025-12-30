@@ -187,6 +187,38 @@ class AuthProvider extends ChangeNotifier {
     }
   }
 
+  /// Update user profile
+  Future<void> updateProfile({
+    String? name,
+    String? madhab,
+    bool? notificationsEnabled,
+  }) async {
+    if (_user == null) return;
+
+    _setLoading(true);
+
+    try {
+      final updates = <String, dynamic>{
+        'id': _user!.id,
+        'updated_at': DateTime.now().toIso8601String(),
+      };
+
+      if (name != null) updates['name'] = name;
+      if (madhab != null) updates['madhab'] = madhab;
+      if (notificationsEnabled != null) {
+        updates['notifications_enabled'] = notificationsEnabled;
+      }
+
+      await _supabase.from('profiles').upsert(updates);
+      notifyListeners();
+    } catch (e) {
+      _setError(e.toString());
+      rethrow;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
   void _setLoading(bool value) {
     _isLoading = value;
     notifyListeners();

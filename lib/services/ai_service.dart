@@ -93,12 +93,25 @@ Be encouraging and focus on Islamic etiquette. Include specific Tajweed rules li
 
   /// Answer Fiqh questions using Groq API
   Future<String> askFiqhQuestion(String question, {String madhab = 'Hanafi'}) async {
+    final apiKey = ApiConfig.groqApiKey;
+    
+    // Check if API key is configured
+    if (apiKey.isEmpty) {
+      return '''Assalamu Alaikum,
+
+The AI service is not yet configured. Please add your Groq API key to the .env file:
+
+GROQ_API_KEY=your_api_key_here
+
+You can get a free API key from console.groq.com''';
+    }
+
     try {
       final response = await _dio.post(
         ApiConfig.groqEndpoint,
         options: Options(
           headers: {
-            'Authorization': 'Bearer ${ApiConfig.groqApiKey}',
+            'Authorization': 'Bearer $apiKey',
             'Content-Type': 'application/json',
           },
         ),
@@ -110,7 +123,8 @@ Be encouraging and focus on Islamic etiquette. Include specific Tajweed rules li
               'content': '''You are a knowledgeable Islamic scholar specializing in Fiqh (Islamic jurisprudence). 
 You follow the $madhab madhab primarily but can reference other madhabs when relevant.
 Provide clear, concise answers with Quran and Hadith references when applicable.
-Be respectful and use Islamic greetings. Always cite sources.'''
+Be respectful and use Islamic greetings. Always cite sources.
+Start your answer with "In the $madhab school..."'''
             },
             {
               'role': 'user',
@@ -118,7 +132,7 @@ Be respectful and use Islamic greetings. Always cite sources.'''
             }
           ],
           'max_tokens': 1024,
-          'temperature': 0.7,
+          'temperature': 0.3,
         }),
       );
 
@@ -126,8 +140,16 @@ Be respectful and use Islamic greetings. Always cite sources.'''
         return response.data['choices'][0]['message']['content'];
       }
       return 'I apologize, I could not process your question at this time. Please try again.';
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        return 'API key is invalid. Please check your GROQ_API_KEY in the .env file.';
+      } else if (e.type == DioExceptionType.connectionTimeout || 
+                 e.type == DioExceptionType.receiveTimeout) {
+        return 'Connection timed out. Please check your internet connection.';
+      }
+      return 'Error: ${e.message ?? "Unknown error occurred"}';
     } catch (e) {
-      return 'Assalamu Alaikum. I encountered an error processing your question. Please check your connection and try again.';
+      return 'Assalamu Alaikum. An error occurred: $e';
     }
   }
 

@@ -3,12 +3,14 @@ class TajweedFeedback {
   final int score;
   final List<String> positives;
   final List<String> improvements;
+  final List<TajweedViolation> violations; // Added violations
   final String details;
 
   TajweedFeedback({
     required this.score,
     required this.positives,
     required this.improvements,
+    required this.violations,
     required this.details,
   });
 
@@ -21,6 +23,9 @@ class TajweedFeedback {
       improvements: (json['improvements'] as List<dynamic>?)
           ?.map((e) => e.toString())
           .toList() ?? [],
+      violations: (json['violations'] as List<dynamic>?)
+          ?.map((e) => TajweedViolation.fromJson(e))
+          .toList() ?? [],
       details: json['details'] ?? 'Keep practicing!',
     );
   }
@@ -30,6 +35,7 @@ class TajweedFeedback {
       'score': score,
       'positives': positives,
       'improvements': improvements,
+      'violations': violations.map((e) => e.toJson()).toList(),
       'details': details,
     };
   }
@@ -61,6 +67,35 @@ class TajweedFeedback {
         english: 'Every attempt brings you closer to perfection.',
       );
     }
+  }
+}
+
+/// Detailed Tajweed Violation
+class TajweedViolation {
+  final String rule;
+  final String timestamp;
+  final int deduction;
+
+  TajweedViolation({
+    required this.rule,
+    required this.timestamp,
+    required this.deduction,
+  });
+
+  factory TajweedViolation.fromJson(Map<String, dynamic> json) {
+    return TajweedViolation(
+      rule: json['rule']?.toString() ?? 'General Rule',
+      timestamp: json['timestamp']?.toString() ?? '',
+      deduction: json['deduction'] is int ? json['deduction'] : 0,
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'rule': rule,
+      'timestamp': timestamp,
+      'deduction': deduction,
+    };
   }
 }
 

@@ -13,6 +13,7 @@ import '../quran/quran_screen.dart';
 import '../fiqh/fiqh_screen.dart';
 import '../settings/settings_screen.dart';
 import '../../widgets/ambient_orb.dart';
+import '../../services/version_check_service.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -31,11 +32,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   String? _currentPrayer;
   String? _timeRemaining;
   bool _isLoading = true;
+  int _userStreak = 0; // Added streak state
 
   @override
   void initState() {
     super.initState();
     _loadDashboardData();
+    
+    // Check for updates after build
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      VersionCheckService().checkVersion(context);
+    });
   }
 
   Future<void> _loadDashboardData() async {
@@ -45,6 +52,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Load prayer times
       final prayerTimes = await _prayerService.getPrayerTimes();
       if (prayerTimes != null && mounted) {
+        // Schedule Notifications
+        // Note: Real app should check 'notifications_enabled' from preferences
+        _prayerService.schedulePrayerNotifications(prayerTimes);
+
         final current = _prayerService.getCurrentPrayer(prayerTimes);
         if (current != null) {
           setState(() {
@@ -62,21 +73,43 @@ class _DashboardScreenState extends State<DashboardScreen> {
         }
       }
       
-      // Load user progress from Supabase
+      // Dynamic Greeting
+      final hour = DateTime.now().hour;
+      String greeting = 'Assalamu Alaikum';
+      if (hour >= 5 && hour < 12) greeting = 'Sabah al-Khair';
+      else if (hour >= 12 && hour < 17) greeting = 'Masa\' al-Khair';
+      else if (hour >= 17 && hour < 22) greeting = 'Masa\' al-Nur';
+      
+      if (mounted) setState(() => _greeting = greeting);
+      
+      // Load user data from Supabase
       final supabase = Supabase.instance.client;
       final user = supabase.auth.currentUser;
+      
       if (user != null) {
-        final response = await supabase
-            .from('quran_verse_progress')
-            .select('surah, ayah')
+        // 1. Get Progress
+        final progressResponse = await supabase
+            .from('quran_progress') // Updated table name from initial schema sync
+            .select('last_surah, last_ayah')
             .eq('user_id', user.id)
-            .order('completed_at', ascending: false)
-            .limit(1);
+            .maybeSingle(); // Use maybeSingle to avoid exception on empty
         
-        if (response.isNotEmpty) {
+        // 2. Get Streak
+        final streakResponse = await supabase
+            .from('user_streaks')
+            .select('current_streak')
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+        if (mounted) {
           setState(() {
-            _currentSurah = response[0]['surah'] ?? 1;
-            _currentAyah = (response[0]['ayah'] ?? 0) + 1;
+            if (progressResponse != null) {
+              _currentSurah = progressResponse['last_surah'] ?? 1;
+              _currentAyah = (progressResponse['last_ayah'] ?? 0) + 1;
+            }
+            if (streakResponse != null) {
+              _userStreak = streakResponse['current_streak'] ?? 0;
+            }
           });
         }
       }
@@ -181,6 +214,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Header Actions
         Row(
           children: [
+            // Streak Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.warmGold.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: AppColors.warmGold.withOpacity(0.5)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.local_fire_department_rounded, color: AppColors.warmGold, size: 16),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$_userStreak',
+                    style: const TextStyle(
+                      color: AppColors.warmGold,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: AppTheme.spacing8),
+
             // Notification Bell
             _buildNotificationBell(),
             const SizedBox(width: AppTheme.spacing8),

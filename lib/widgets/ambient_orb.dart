@@ -146,23 +146,27 @@ class _AmbientOrbState extends State<AmbientOrb> with SingleTickerProviderStateM
           ),
         ),
         
-        // Expanded Panel
+        // Expanded Panel with Scroll
         if (_isExpanded)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: _buildExpandedPanel()
-              .animate()
-              .slideY(begin: 1, end: 0, duration: 300.ms, curve: Curves.easeOut),
+          Positioned.fill(
+            child: DraggableScrollableSheet(
+              initialChildSize: 0.6,
+              minChildSize: 0.3,
+              maxChildSize: 0.85,
+              builder: (context, scrollController) {
+                return _buildExpandedPanel(scrollController)
+                  .animate()
+                  .fadeIn(duration: 200.ms);
+              },
+            ),
           ),
       ],
     );
   }
 
-  Widget _buildExpandedPanel() {
+  Widget _buildExpandedPanel(ScrollController scrollController) {
     return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16),
+      margin: const EdgeInsets.only(left: 16, right: 16, bottom: 16, top: 80),
       decoration: BoxDecoration(
         color: context.surfaceColor,
         borderRadius: const BorderRadius.all(Radius.circular(24)),
@@ -175,9 +179,11 @@ class _AmbientOrbState extends State<AmbientOrb> with SingleTickerProviderStateM
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
+      child: SingleChildScrollView(
+        controller: scrollController,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
           // Handle
           Container(
             margin: const EdgeInsets.only(top: 12, bottom: 8),
@@ -399,7 +405,8 @@ class _AmbientOrbState extends State<AmbientOrb> with SingleTickerProviderStateM
           ),
           
           const SizedBox(height: 24),
-        ],
+          ],
+        ),
       ),
     );
   }
