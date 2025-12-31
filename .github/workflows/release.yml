@@ -61,7 +61,7 @@ jobs:
           echo "storeFile=meek-release-key.jks" >> android/key.properties
 
       - name: Build APK
-        run: flutter build apk --release
+        run: flutter build apk --release --verbose
 
       - name: Build App Bundle
         run: flutter build appbundle --release

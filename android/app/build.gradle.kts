@@ -40,10 +40,15 @@ android {
     signingConfigs {
         create("release") {
             if (keystorePropertiesFile.exists()) {
-                keyAlias = keystoreProperties["keyAlias"] as String
-                keyPassword = keystoreProperties["keyPassword"] as String
-                storeFile = file(keystoreProperties["storeFile"] as String)
-                storePassword = keystoreProperties["storePassword"] as String
+                // Use getProperty with fallback to avoid crashes if secrets are empty
+                keyAlias = keystoreProperties.getProperty("keyAlias") ?: "meek"
+                keyPassword = keystoreProperties.getProperty("keyPassword") ?: "password"
+                storeFile = if (keystoreProperties.getProperty("storeFile") != null) {
+                    file(keystoreProperties.getProperty("storeFile"))
+                } else {
+                    file("meek-release-key.jks")
+                }
+                storePassword = keystoreProperties.getProperty("storePassword") ?: "password"
             }
         }
     }
