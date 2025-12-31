@@ -31,12 +31,7 @@ jobs:
         with:
           channel: 'stable'
 
-      - name: Debug - List Files
-        run: ls -R
-
-      - name: Get dependencies
-        run: flutter pub get --verbose
-
+      # CRITICAL: Create .env BEFORE flutter pub get (required as asset)
       - name: Create .env file
         run: |
           echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
@@ -44,6 +39,9 @@ jobs:
           echo "GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }}" >> .env
           echo "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }}" >> .env
           echo "OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }}" >> .env
+
+      - name: Get dependencies
+        run: flutter pub get
 
       - name: Decode Keystore
         env:
