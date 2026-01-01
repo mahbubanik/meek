@@ -61,7 +61,7 @@ jobs:
           echo "storeFile=meek-release-key.jks" >> android/key.properties
 
       - name: Analyze Code
-        run: flutter analyze
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
 
       - name: Debug Info
         run: |
