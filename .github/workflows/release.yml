@@ -60,6 +60,9 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=meek-release-key.jks" >> android/key.properties
 
+      - name: Analyze Code
+        run: flutter analyze
+
       - name: Debug Info
         run: |
           flutter doctor -v
