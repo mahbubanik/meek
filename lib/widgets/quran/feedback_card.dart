@@ -186,14 +186,7 @@ class _FeedbackCardState extends State<FeedbackCard> {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            context.primaryColor.withValues(alpha: 0.05),
-            Colors.transparent,
-          ],
-        ),
+        color: context.primaryColor.withValues(alpha: 0.05),
         border: Border(bottom: BorderSide(color: context.borderColor.withValues(alpha: 0.5))),
       ),
       child: Column(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 /// Authentication Provider - Manages user auth state
 class AuthProvider extends ChangeNotifier {
@@ -109,11 +110,19 @@ class AuthProvider extends ChangeNotifier {
     _clearError();
 
     try {
-      const webClientId = 'YOUR_WEB_CLIENT_ID.apps.googleusercontent.com';
-      const iosClientId = 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com';
+      // Load Google client IDs from environment
+      // These should be set in .env file:
+      // GOOGLE_WEB_CLIENT_ID=your-web-client-id.apps.googleusercontent.com
+      // GOOGLE_IOS_CLIENT_ID=your-ios-client-id.apps.googleusercontent.com
+      final webClientId = dotenv.env['GOOGLE_WEB_CLIENT_ID'] ?? '';
+      final iosClientId = dotenv.env['GOOGLE_IOS_CLIENT_ID'] ?? '';
+
+      if (webClientId.isEmpty) {
+        throw Exception('Google Web Client ID not configured. Add GOOGLE_WEB_CLIENT_ID to .env file.');
+      }
 
       final GoogleSignIn googleSignIn = GoogleSignIn(
-        clientId: iosClientId,
+        clientId: iosClientId.isNotEmpty ? iosClientId : null,
         serverClientId: webClientId,
       );
 

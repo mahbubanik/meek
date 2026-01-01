@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../theme/colors.dart';
 import '../../theme/typography.dart';
@@ -32,12 +33,16 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   int _currentAyah = 1;
   bool _isLoading = true;
   String? _error;
+  
+  // SharedPreferences keys
+  static const String _keySurahId = 'quran_surah_id';
+  static const String _keyAyahNumber = 'quran_ayah_number';
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadInitialData();
+    _loadSavedProgress();
   }
 
   @override
@@ -46,26 +51,42 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
     _audioPlayer.dispose();
     super.dispose();
   }
-
-  Future<void> _loadInitialData() async {
+  
+  /// Load saved progress from SharedPreferences
+  Future<void> _loadSavedProgress() async {
     setState(() {
       _isLoading = true;
       _error = null;
     });
-
+    
     try {
-      // Start with Al-Ikhlas (Surah 112) like the screenshot
-      _currentSurah = allSurahs.firstWhere((s) => s.id == 112);
+      final prefs = await SharedPreferences.getInstance();
+      final savedSurahId = prefs.getInt(_keySurahId) ?? 1; // Default to Al-Fatiha
+      final savedAyah = prefs.getInt(_keyAyahNumber) ?? 1;
+      
+      _currentSurah = allSurahs.firstWhere(
+        (s) => s.id == savedSurahId,
+        orElse: () => allSurahs.first,
+      );
+      _currentAyah = savedAyah;
+      
       await _loadVerse(_currentSurah!.id, _currentAyah);
     } catch (e) {
+      // Fallback to Al-Fatiha if error
+      _currentSurah = allSurahs.first;
       setState(() {
         _error = e.toString();
-      });
-    } finally {
-      setState(() {
         _isLoading = false;
       });
     }
+  }
+  
+  /// Save progress to SharedPreferences
+  Future<void> _saveProgress() async {
+    if (_currentSurah == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_keySurahId, _currentSurah!.id);
+    await prefs.setInt(_keyAyahNumber, _currentAyah);
   }
 
   Future<void> _loadVerse(int surahId, int ayah) async {
@@ -79,6 +100,8 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
         _currentVerse = verse;
         _currentAyah = ayah;
       });
+      // Save progress after successful load
+      await _saveProgress();
     } catch (e) {
       // Use offline fallback
       setState(() {
@@ -90,7 +113,10 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
           textUthmani: _getOfflineArabicText(surahId, ayah),
           translations: [],
         );
+        _currentAyah = ayah;
       });
+      // Still save progress even with fallback
+      await _saveProgress();
     } finally {
       setState(() {
         _isLoading = false;
@@ -344,7 +370,7 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
             ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: _loadInitialData,
+              onPressed: _loadSavedProgress,
               child: const Text('Retry'),
             ),
           ],

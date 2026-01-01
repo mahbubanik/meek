@@ -9,6 +9,7 @@ import '../../theme/typography.dart';
 import '../../theme/app_theme.dart';
 import '../../services/prayer_service.dart';
 import '../../services/quran_api_service.dart';
+import '../../services/notification_service.dart';
 import '../quran/quran_screen.dart';
 import '../fiqh/fiqh_screen.dart';
 import '../settings/settings_screen.dart';
@@ -214,27 +215,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
         // Header Actions
         Row(
           children: [
-            // Streak Badge
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.warmGold.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: AppColors.warmGold.withOpacity(0.5)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.local_fire_department_rounded, color: AppColors.warmGold, size: 16),
-                  const SizedBox(width: 4),
-                  Text(
-                    '$_userStreak',
-                    style: const TextStyle(
-                      color: AppColors.warmGold,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
+            // Streak Badge - Tappable
+            GestureDetector(
+              onTap: () => _showStreakDialog(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.warmGold.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: AppColors.warmGold.withOpacity(0.5)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.local_fire_department_rounded, color: AppColors.warmGold, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      '$_userStreak',
+                      style: const TextStyle(
+                        color: AppColors.warmGold,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(width: AppTheme.spacing8),
@@ -267,9 +271,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               color: context.mutedColor,
               size: 20,
             ),
-            onPressed: () {
-              // Show notifications
-            },
+            onPressed: () => _showNotificationDialog(),
           ),
         ),
         Positioned(
@@ -579,6 +581,235 @@ class _DashboardScreenState extends State<DashboardScreen> {
               'Ask any Islamic question',
               style: AppTypography.bodySmall(context.foregroundColor.withValues(alpha: 0.5)),
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Show notification settings dialog
+  void _showNotificationDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.borderColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Icon
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: context.primaryColor.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.notifications_outlined,
+                color: context.primaryColor,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Text(
+              'Prayer Notifications',
+              style: AppTypography.headingSmall(context.foregroundColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Get notified when prayer times begin. Never miss a prayer again.',
+              style: AppTypography.bodyMedium(context.mutedColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Enable Button
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () async {
+                  final granted = await NotificationService().requestPermissions();
+                  if (mounted) {
+                    Navigator.pop(context);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          granted 
+                            ? '✅ Notifications enabled!' 
+                            : '⚠️ Please enable notifications in settings',
+                        ),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Enable Notifications'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(
+                'Maybe Later',
+                style: TextStyle(color: context.mutedColor),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Show streak stats dialog
+  void _showStreakDialog() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: context.surfaceColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Handle
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: context.borderColor,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            // Fire Icon
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: AppColors.warmGold.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.local_fire_department_rounded,
+                color: AppColors.warmGold,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 16),
+            
+            Text(
+              '$_userStreak Day Streak!',
+              style: AppTypography.headingLarge(context.foregroundColor),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              _userStreak > 0 
+                ? 'MashaAllah! Keep up the consistent practice.'
+                : 'Start practicing daily to build your streak!',
+              style: AppTypography.bodyMedium(context.mutedColor),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            
+            // Stats Row
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: context.backgroundColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _buildStreakStat('Current', '$_userStreak', Icons.local_fire_department),
+                  Container(width: 1, height: 40, color: context.borderColor),
+                  _buildStreakStat('Best', '$_userStreak', Icons.emoji_events),
+                  Container(width: 1, height: 40, color: context.borderColor),
+                  _buildStreakStat('Total', '${_userStreak * 5}m', Icons.timer_outlined),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const QuranScreen()),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: context.primaryColor,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Continue Practice'),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStreakStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.warmGold, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: context.foregroundColor,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: context.mutedColor,
           ),
         ),
       ],

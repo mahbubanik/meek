@@ -326,20 +326,26 @@ class _PracticeTabState extends State<PracticeTab> {
             width: 112,
             height: 112,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  context.primaryColor,
-                  context.accentColor,
-                ],
-              ),
+              color: context.primaryColor,
               shape: BoxShape.circle,
-              boxShadow: AppTheme.shadowPrimary(context.primaryColor),
+              boxShadow: [
+                // Outer glow effect
+                BoxShadow(
+                  color: context.primaryColor.withValues(alpha: 0.4),
+                  blurRadius: 24,
+                  spreadRadius: 4,
+                ),
+                // Inner shadow for depth
+                BoxShadow(
+                  color: context.primaryColor.withValues(alpha: 0.6),
+                  blurRadius: 8,
+                  spreadRadius: 0,
+                ),
+              ],
             ),
-            child: const Icon(
+            child: Icon(
               Icons.mic,
-              color: Colors.white,
+              color: context.isDarkMode ? AppColors.deepNavy : Colors.white,
               size: 48,
             ),
           ),

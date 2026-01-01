@@ -72,17 +72,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       ),
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              context.backgroundColor,
-              context.backgroundColor,
-              context.primaryColor.withValues(alpha: 0.05),
-            ],
-          ),
-        ),
+        color: context.backgroundColor,
         child: SafeArea(
           child: Center(
             child: SingleChildScrollView(
@@ -123,16 +113,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
           width: 64,
           height: 64,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                context.primaryColor,
-                context.accentColor,
-              ],
-            ),
+            color: context.primaryColor,
             borderRadius: AppTheme.borderRadiusMedium,
-            boxShadow: AppTheme.shadowPrimary(context.primaryColor),
+            boxShadow: [
+              BoxShadow(
+                color: context.primaryColor.withValues(alpha: 0.4),
+                blurRadius: 16,
+                spreadRadius: 2,
+              ),
+            ],
           ),
           child: const Center(
             child: Text('🌙', style: TextStyle(fontSize: 28)),
@@ -185,10 +174,19 @@ class _SignUpScreenState extends State<SignUpScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(AppTheme.spacing24),
       decoration: BoxDecoration(
-        color: context.surfaceColor,
+        // Glass morphism effect
+        color: context.surfaceColor.withValues(alpha: 0.85),
         borderRadius: AppTheme.borderRadiusXLarge,
-        border: Border.all(color: context.borderColor),
-        boxShadow: AppTheme.shadowMedium,
+        border: Border.all(
+          color: context.borderColor.withValues(alpha: 0.5),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Form(
         key: _formKey,
