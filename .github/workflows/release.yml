@@ -63,20 +63,11 @@ jobs:
       - name: Build APK
         run: flutter build apk --release --verbose
 
-      - name: Build App Bundle
-        run: flutter build appbundle --release
-
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Upload AAB Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: release-aab
-          path: build/app/outputs/bundle/release/app-release.aab
 
   release:
     name: Create Release
@@ -90,11 +81,6 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-apk
-
-      - name: Download AAB
-        uses: actions/download-artifact@v4
-        with:
-          name: release-aab
 
       - name: Get version
         id: version
@@ -121,14 +107,12 @@ jobs:
             
             ### Download
             - **APK**: For direct installation on Android
-            - **AAB**: For Play Store upload
             
             ---
             
             **Sha'Allah, may this app bring you closer to the Quran** 📖
           files: |
             app-release.apk
-            app-release.aab
           draft: false
           prerelease: false
         env:
