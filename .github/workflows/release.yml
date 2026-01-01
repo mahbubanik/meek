@@ -60,8 +60,13 @@ jobs:
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=meek-release-key.jks" >> android/key.properties
 
+      - name: Debug Info
+        run: |
+          flutter doctor -v
+          ls -R android/app
+
       - name: Build APK
-        run: flutter build apk --release --verbose
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
