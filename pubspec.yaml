@@ -1,7 +1,7 @@
 name: meek_app
 description: "MEEK - Quran Learning App"
 publish_to: 'none'
-version: 1.0.18+18
+version: 1.0.19+19
 
 environment:
   sdk: '>=3.2.0 <4.0.0'
@@ -16,7 +16,9 @@ dependencies:
   flutter_animate: ^4.5.0
   confetti: ^0.8.0
   shimmer: ^3.0.0
-  flutter_local_notifications: ^19.0.0
+  
+  # Notifications - PINNED to 18.0.1 (19.x has breaking API changes)
+  flutter_local_notifications: 18.0.1
   timezone: ^0.10.0
 
   # State Management

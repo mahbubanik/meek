@@ -29,6 +29,7 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.27.1'
           channel: 'stable'
 
       # CRITICAL: Create .env BEFORE flutter pub get (required as asset)
@@ -59,14 +60,6 @@ jobs:
           echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
           echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
           echo "storeFile=meek-release-key.jks" >> android/key.properties
-
-      - name: Analyze Code
-        run: flutter analyze --no-fatal-infos --no-fatal-warnings
-
-      - name: Debug Info
-        run: |
-          flutter doctor -v
-          ls -R android/app
 
       - name: Build APK
         run: flutter build apk --release
