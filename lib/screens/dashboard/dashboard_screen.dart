@@ -184,7 +184,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Text(
               _greeting,
-              style: AppTypography.headingSmall(context.foregroundColor),
+              style: AppTypography.bodyLarge(context.foregroundColor).copyWith(
+                fontWeight: FontWeight.w600,
+                fontSize: 18,
+              ),
             ),
             const SizedBox(height: 4),
             if (_currentPrayer != null)
@@ -258,8 +261,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Stack(
       children: [
         Container(
-          width: 44,
-          height: 44,
+          width: 36,
+          height: 36,
           decoration: BoxDecoration(
             color: context.surfaceColor,
             shape: BoxShape.circle,
@@ -299,8 +302,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
         );
       },
       child: Container(
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
           color: context.primaryColor.withValues(alpha: 0.1),
           shape: BoxShape.circle,
@@ -574,16 +577,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
         
         const SizedBox(height: AppTheme.spacing12),
         
-        // Empty state or recent questions
-        Expanded(
-          child: Center(
-            child: Text(
-              'Ask any Islamic question',
-              style: AppTypography.bodySmall(context.foregroundColor.withValues(alpha: 0.5)),
-            ),
-          ),
-        ),
+        // Recent Questions Section
+        const SizedBox(height: AppTheme.spacing8),
+        _buildRecentFiqhQuestions(),
       ],
+    );
+  }
+
+  /// Build recent Fiqh questions chips
+  Widget _buildRecentFiqhQuestions() {
+    final recentQuestions = [
+      'How to pray Witr?',
+      'Is my Wudu valid?',
+      'Fasting rules',
+    ];
+
+    return SizedBox(
+      height: 32,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: recentQuestions.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          return GestureDetector(
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const FiqhScreen()),
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: context.surfaceColor,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: context.borderColor),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history, size: 12, color: context.mutedColor),
+                  const SizedBox(width: 6),
+                  Text(
+                    recentQuestions[index],
+                    style: AppTypography.labelSmall(context.foregroundColor),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
     );
   }
 

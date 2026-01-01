@@ -294,7 +294,9 @@ class _PracticeTabState extends State<PracticeTab> {
         border: Border.all(color: context.borderColor),
       ),
       child: Text(
-        widget.verse.textUthmani,
+        widget.verse.textUthmani.isNotEmpty 
+            ? widget.verse.textUthmani 
+            : 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ',  // Fallback: Bismillah
         style: AppTypography.arabicLarge(context.arabicTextColor),
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
