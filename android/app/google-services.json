@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "788946760298",
+    "project_id": "meek-6e408",
+    "storage_bucket": "meek-6e408.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:788946760298:android:d72c31334aa332772fd013",
+        "android_client_info": {
+          "package_name": "com.meek.quran"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "788946760298-gh83rkpus5op269p9s0qtk8is5p09hlv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCqU7gMBYVvPxy0AxcDByXjdM8GqbOiEzo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "788946760298-gh83rkpus5op269p9s0qtk8is5p09hlv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
