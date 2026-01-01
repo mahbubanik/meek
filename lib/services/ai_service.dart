@@ -164,6 +164,7 @@ Start your answer with "In the $madhab school..."'''
       improvements: [
         'Focus on proper elongation (Madd) rules',
       ],
+      violations: [],
       details: 'MashaAllah! Your recitation shows dedication. Continue practicing with focus on Tajweed rules.',
     );
   }

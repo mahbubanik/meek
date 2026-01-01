@@ -205,6 +205,7 @@ class _PracticeTabState extends State<PracticeTab> {
             score: 0,
             positives: [],
             improvements: ['Could not analyze audio. Please try again.'],
+            violations: [],
             details: 'Detailed Error: $e',
           );
           _state = RecordingState.feedback;

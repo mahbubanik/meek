@@ -39,6 +39,7 @@ class TajweedAnalysisService {
         score: 0,
         positives: [],
         improvements: ['Recording too short or silent. Please recite the verse clearly.'],
+        violations: [],
         details: 'Please try recording again with a clear voice.',
       );
     }
@@ -53,6 +54,7 @@ class TajweedAnalysisService {
           score: 0,
           positives: [],
           improvements: ['No clear speech detected. Please speak louder and try again.'],
+          violations: [],
           details: 'Unable to detect speech in the recording.',
         );
       }
