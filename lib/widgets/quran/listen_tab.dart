@@ -198,7 +198,9 @@ class _ListenTabState extends State<ListenTab> {
       children: [
         // Arabic Verse - Large, Gold, Centered
         Text(
-          widget.verse.textUthmani,
+          widget.verse.textUthmani.isNotEmpty 
+              ? widget.verse.textUthmani 
+              : 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ', // Fallback
           style: AppTypography.arabicLarge(context.arabicTextColor).copyWith(
             fontSize: 32,
             height: 2.0,

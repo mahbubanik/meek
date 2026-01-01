@@ -296,35 +296,41 @@ class _QuranScreenState extends State<QuranScreen> with SingleTickerProviderStat
   }
 
   Widget _buildTabBar(bool isDark) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: isDark ? AppColors.darkSurface : Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+    return Center(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: isDark ? AppColors.darkSurface : Colors.white,
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isDark ? AppColors.darkBorder : AppColors.lightBorder,
+          ),
         ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        indicator: BoxDecoration(
-          color: AppColors.teal,
-          borderRadius: BorderRadius.circular(20),
+        child: TabBar(
+          controller: _tabController,
+          indicator: BoxDecoration(
+            color: AppColors.warmGold,
+            borderRadius: BorderRadius.circular(24),
+          ),
+          indicatorSize: TabBarIndicatorSize.tab,
+          dividerColor: Colors.transparent,
+          labelColor: AppColors.deepNavy, // Dark text on gold background
+          unselectedLabelColor: isDark ? AppColors.cream.withValues(alpha: 0.7) : AppColors.charcoal.withValues(alpha: 0.7),
+          labelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+          ),
+          unselectedLabelStyle: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+          tabs: const [
+            Tab(text: 'Listen'),
+            Tab(text: 'Meaning'),
+            Tab(text: 'Practice'),
+          ],
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        dividerColor: Colors.transparent,
-        labelColor: Colors.white,
-        unselectedLabelColor: isDark ? AppColors.cream.withValues(alpha: 0.6) : AppColors.charcoal.withValues(alpha: 0.6),
-        labelStyle: const TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-        ),
-        tabs: const [
-          Tab(text: 'Listen'),
-          Tab(text: 'Meaning'),
-          Tab(text: 'Practice'),
-        ],
       ),
     );
   }
