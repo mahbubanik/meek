@@ -15,8 +15,8 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.meek.meek_app"
-    compileSdk = 34
-    ndkVersion = "25.1.8937393"
+    compileSdk = 36
+    ndkVersion = "26.1.10909125"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
