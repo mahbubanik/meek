@@ -14,7 +14,7 @@ class NotificationService {
   bool _isInitialized = false;
 
   // Aggressive vibration pattern (like a phone call)
-  static const Int64List _aggressiveVibrationPattern = Int64List.fromList([
+  static final Int64List _aggressiveVibrationPattern = Int64List.fromList([
     0, 1000, 500, 1000, 500, 1000, 500, 1000, 500, 1000
   ]);
 
